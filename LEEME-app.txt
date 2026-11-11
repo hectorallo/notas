@@ -1,0 +1,22 @@
+APP DE SEGUIMIENTO DE CIRCUITOS — PRIMERA VERSIÓN
+
+Contenido:
+- mi-curso.html: aplicación docente original.
+- index.html: consulta actual para familias.
+- alumnos.html: nuevo portal visual de consulta de circuitos para alumnos.
+
+Cómo funciona esta primera versión:
+1. El docente continúa registrando los circuitos desde mi-curso.html.
+2. En la aplicación docente, genera/publica los datos para consulta como ya lo hacía.
+3. El archivo datos-padres.json generado debe quedar junto a index.html y alumnos.html en el mismo alojamiento web.
+4. El alumno abre alumnos.html e ingresa su clave personal de 8 caracteres, que actualmente es el código individual generado por la aplicación docente.
+5. El portal muestra únicamente su nombre, curso y el avance de sus circuitos, usando el nombre completo de cada circuito.
+
+IMPORTANTE:
+- Esta entrega es un prototipo funcional de interfaz y lectura de datos compatible con el formato publicado actual.
+- Para probarlo correctamente debe publicarse junto con datos-padres.json generado desde los datos vigentes del docente.
+- No compartir el archivo datos-padres.json ni las claves en grupos públicos.
+- Los códigos actuales son claves individuales de acceso, no contraseñas tradicionales elegidas por cada alumno. En una etapa posterior podemos implementar contraseñas personales, recuperación y gestión de usuarios.
+- El contenido del archivo de datos publicado es cifrado por alumno según el mecanismo ya existente. El portal no habilita al alumno a editar circuitos.
+- La sincronización entre dispositivos y el alojamiento público deben configurarse y probarse antes de usarlo oficialmente.
+- No se incluyeron datos reales de alumnos en este paquete.

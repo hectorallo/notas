@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Mis circuitos</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b2430;--mu:#6b7686;--bd:#e1e5ea;--ac:#2a62d9;--ok:#1f9d55;--no:#d64545;--wa:#d9890f;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181e;--card:#1d232c;--tx:#e8ecf1;--mu:#93a0b1;--bd:#2c3542;--ac:#6b95f0;--ok:#43c27a;--no:#f07070;--wa:#e9a73e;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+#app{max-width:720px;margin:0 auto;padding:14px}
+h1{font-size:21px;margin:0 0 2px}h2{font-size:16px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:10px}
+.muted{color:var(--mu);font-size:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 13px;text-transform:uppercase;letter-spacing:2px;font-weight:700;font-family:ui-monospace,Consolas,monospace}
+button{font:inherit;cursor:pointer;background:var(--ac);color:#fff;border:0;border-radius:10px;padding:12px 18px;font-weight:700}
+button.ghost{background:var(--card);color:var(--tx);border:1px solid var(--bd)}button:disabled{opacity:.6;cursor:wait}
+.big{font-size:30px;font-weight:700;line-height:1.1}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;text-align:center;margin-top:6px}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)}.item:last-child{border:0}
+.ok{color:var(--ok);font-weight:600}.no{color:var(--no);font-weight:600}
+.bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:var(--ok)}
+.pill{display:inline-block;padding:3px 10px;border-radius:10px;font-size:13px;background:var(--bd);color:var(--mu);margin:2px}
+.pill.no{background:rgba(214,69,69,.15);color:var(--no)}.pill.ok{background:rgba(31,157,85,.16);color:var(--ok)}.pill.wa{background:rgba(217,137,15,.2);color:var(--wa)}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.chip{display:flex;flex-direction:column;align-items:center;min-width:40px;padding:3px 4px;border-radius:7px;background:var(--bd);color:var(--mu);font-size:12px}
+.chip b{font-size:14px}.chip i{font-style:normal;font-size:10px}
+.chip.P{background:var(--ok);color:#fff}.chip.A{background:var(--no);color:#fff}.chip.T{background:var(--wa);color:#fff}
+.alert{background:rgba(214,69,69,.12);border:1px solid var(--no);color:var(--no);border-radius:10px;padding:8px 10px;margin-top:10px;font-weight:600;font-size:14px}
+.note{font-size:13px;color:var(--mu);margin:6px 0 0}
+#msg{min-height:20px;font-size:14px;color:var(--mu);margin:8px 0 0}
+footer{text-align:center;margin:26px 0 10px}
+@media print{button,.noprint{display:none!important}body{background:#fff}.card{break-inside:avoid}}
+
+.circuit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:9px;margin-top:12px}
+.circuit{border:1px solid var(--bd);border-radius:12px;padding:12px;min-height:112px;display:flex;flex-direction:column;gap:7px}
+.circuit-icon{font-size:25px;font-weight:800}
+.circuit-name{font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+.circuit-state{font-size:11px;font-weight:800;letter-spacing:.5px;margin-top:auto}
+.circuit.done{background:rgba(31,157,85,.09);border-color:rgba(31,157,85,.45)}
+.circuit.done .circuit-icon,.circuit.done .circuit-state{color:var(--ok)}
+.circuit.todo{background:rgba(217,137,15,.07);border-color:rgba(217,137,15,.4)}
+.circuit.todo .circuit-icon,.circuit.todo .circuit-state{color:var(--wa)}
+.attention{background:rgba(217,137,15,.10);border-color:rgba(217,137,15,.35)}
+.success{background:rgba(31,157,85,.10);border-color:rgba(31,157,85,.35)}
+</style></head><body>
+<div id="app"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const fd=d=>d?d.slice(8)+'/'+d.slice(5,7):'';
+const fdl=d=>d?d.slice(8)+'/'+d.slice(5,7)+'/'+d.slice(0,4):'';
+const E=new TextEncoder(),ub=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const hex=u=>[...u].map(x=>x.toString(16).padStart(2,'0')).join('');
+/* ---- v2: una sola derivación lenta (PBKDF2) por código; el índice y la clave salen de ella ---- */
+async function kdf(code,salt,it){const b=await crypto.subtle.importKey('raw',E.encode(code),'PBKDF2',false,['deriveBits']);return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:it,hash:'SHA-256'},b,256))}
+async function h2(k,tag){const t=E.encode(tag),m=new Uint8Array(k.length+t.length);m.set(k);m.set(t,k.length);return new Uint8Array(await crypto.subtle.digest('SHA-256',m))}
+async function idxOf(k){return hex((await h2(k,'idx')).slice(0,12))}
+async function dec2(k,e){const ek=await crypto.subtle.importKey('raw',await h2(k,'enc'),'AES-GCM',false,['decrypt']);return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(e.i)},ek,ub(e.c))))}
+/* ---- v1: formato anterior (se sigue leyendo hasta que vuelvas a publicar) ---- */
+async function sha1(s){return hex(new Uint8Array(await crypto.subtle.digest('SHA-256',E.encode(s)))).slice(0,20)}
+async function dec1(code,e){const b=await crypto.subtle.importKey('raw',E.encode(code),'PBKDF2',false,['deriveKey']);const k=await crypto.subtle.deriveKey({name:'PBKDF2',salt:ub(e.s),iterations:100000,hash:'SHA-256'},b,{name:'AES-GCM',length:256},false,['decrypt']);return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(e.i)},k,ub(e.c))))}
+
+let META=null,SNAP=null;
+async function cargar(){
+ try{const r=await fetch('datos-padres.json',{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();META=j;SNAP=j.snap||j}catch(e){META=null;SNAP=null}
+}
+function inicio(){
+ let sv='';try{sv=localStorage.getItem('pcod')||''}catch(e){}
+ $('#app').innerHTML=`<h1>🔧 Mis circuitos</h1>
+ <p class=muted>Ingresá tu clave personal para consultar el avance de tus prácticas.</p>
+ <div class=card><div class=row>
+  <input id=cd value="${esc(sv)}" placeholder="TU CLAVE" maxlength=9 autocomplete=off autocapitalize=characters spellcheck=false style="flex:1;min-width:150px">
+  <button id=vb onclick="ver()">Ver</button></div><p id=msg role=status></p></div>
+ <div id=rep></div>
+ <footer class=muted>${META&&META.generado?'Datos actualizados el '+new Date(META.generado).toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}):''}<br>Si no tenés tu clave de acceso, solicitásela al docente.</footer>`;
+ $('#cd').addEventListener('keydown',e=>{if(e.key==='Enter')ver()});
+ if(sv&&META)ver();
+}
+async function ver(){
+ const code=$('#cd').value.toUpperCase().replace(/[^A-Z0-9]/g,''),m=$('#msg'),b=$('#vb');
+ if(!code){m.textContent='Escribí tu clave.';return}
+ if(code.length!==8){m.textContent='La clave debe tener 8 letras y números.';return}
+ if(!META){m.textContent='Todavía no hay información publicada.';return}
+ b.disabled=true;m.textContent='Verificando…';
+ try{
+  let p=null;
+  if(META.v===2){const k=await kdf(code,ub(META.salt),META.it),e=SNAP[await idxOf(k)];if(e)p=await dec2(k,e)}
+  else{const e=SNAP[await sha1('i:'+code)];if(e)p=await dec1(code,e)}
+  if(!p){m.textContent='Clave no encontrada. Revisala e intentá de nuevo.';$('#rep').innerHTML='';try{localStorage.removeItem('pcod')}catch(x){}return}
+  m.textContent='';try{localStorage.setItem('pcod',code)}catch(x){}
+  mostrar(p);
+ }catch(x){m.textContent='No se pudo abrir con ese código.';$('#rep').innerHTML=''}
+ finally{b.disabled=false}
+}
+const isN=v=>/^\d+([.,]\d+)?$/.test(String(v).trim()),nv=v=>parseFloat(String(v).replace(',','.'));
+function nota(v){if(isN(v))return`<b class="${nv(v)<6?'no':''}">${esc(v)}</b>`;const u=String(v).toUpperCase();
+ if(u==='TEA')return'<span class="pill ok">TEA</span>';if(u==='TEP')return'<span class="pill wa">TEP</span>';
+ if(u==='A')return'<span class=muted>Ausente</span>';if(u==='X')return'<span class=ok>✔</span>';return`<b>${esc(v)}</b>`}
+function recLegacy(p){const g={};(p.gr||[]).forEach(x=>{const t=String(x[0]).split(' · ')[0];(g[t]=g[t]||[]).push(x[1])});
+ return Object.keys(g).filter(t=>{const n=g[t].filter(isN).map(nv);return n.length&&Math.max(...n)<6})}
+function mostrar(p){
+ const circ=p.circ||[];
+ const hechos=circ.filter(x=>x[1]).length;
+ const total=circ.length;
+ const pendientes=total-hechos;
+ const pct=total?Math.round(hechos/total*100):0;
+ let h=`<div class="card">
+   <div class="muted">Hola,</div>
+   <h1 style="font-size:25px;margin:2px 0 4px">${esc(p.n)}</h1>
+   <div class="muted">${esc(p.c)}${p.m?' · '+esc(p.m):''}</div>
+ </div>`;
+ if(!total){
+   h+=`<div class="card"><h2>Todavía no hay circuitos cargados</h2><p class="muted">Consultá con tu docente cuándo estarán disponibles.</p></div>`;
+ }else{
+   h+=`<div class="card">
+     <div class="muted">MI AVANCE GENERAL</div>
+     <div style="display:flex;align-items:end;justify-content:space-between;gap:8px;margin-top:4px">
+       <div class="big ok">${hechos} <span style="font-size:16px;color:var(--mu)">de ${total}</span></div>
+       <b>${pct}%</b>
+     </div>
+     <div class="bar"><i style="width:${pct}%"></i></div>
+     <div class="grid">
+       <div><div class="big ok">${hechos}</div><div class="muted">Completados</div></div>
+       <div><div class="big ${pendientes?'no':''}">${pendientes}</div><div class="muted">Pendientes</div></div>
+     </div>
+   </div>`;
+   h+=`<div class="card"><h2>Mis circuitos</h2><p class="muted">Los nombres corresponden a los circuitos registrados por tu docente.</p>
+     <div class="circuit-grid">${circ.map((x,i)=>`<div class="circuit ${x[1]?'done':'todo'}">
+       <div class="circuit-icon">${x[1]?'✓':'○'}</div>
+       <div class="circuit-name">${esc(x[0])}</div>
+       <div class="circuit-state">${x[1]?'COMPLETADO':'PENDIENTE'}</div>
+     </div>`).join('')}</div>
+   </div>`;
+   if(pendientes){
+     h+=`<div class="card attention"><b>📌 Próximo objetivo</b><p style="margin:5px 0 0">Te quedan ${pendientes} circuito${pendientes===1?'':'s'} por completar. ¡Seguí avanzando!</p></div>`;
+   }else{
+     h+=`<div class="card success"><b>🎉 ¡Excelente trabajo!</b><p style="margin:5px 0 0">Completaste todos los circuitos registrados.</p></div>`;
+   }
+ }
+ h+=`<div class="card muted" style="text-align:center">Información actualizada: ${fdl(p.u)}<br>Este espacio es de consulta. Los avances los registra el docente.</div>`;
+ h+=`<div class="card noprint" style="text-align:center"><button class="ghost" onclick="salir()">Cerrar mi consulta</button></div>`;
+ $('#rep').innerHTML=h;
+}
+function salir(){try{localStorage.removeItem('pcod')}catch(e){}inicio()}
+(async()=>{await cargar();inicio()})();
+</script></body></html>
