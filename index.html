@@ -49,11 +49,15 @@ async function dec2(k,e){const ek=await crypto.subtle.importKey('raw',await h2(k
 async function sha1(s){return hex(new Uint8Array(await crypto.subtle.digest('SHA-256',E.encode(s)))).slice(0,20)}
 async function dec1(code,e){const b=await crypto.subtle.importKey('raw',E.encode(code),'PBKDF2',false,['deriveKey']);const k=await crypto.subtle.deriveKey({name:'PBKDF2',salt:ub(e.s),iterations:100000,hash:'SHA-256'},b,{name:'AES-GCM',length:256},false,['decrypt']);return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(e.i)},k,ub(e.c))))}
 
-let META=null,SNAP=null;
+/* Si este archivo lo descargaste desde el panel (☁️ Nube), la dirección del servidor ya viene puesta */
+const API_URL='https://script.google.com/macros/s/AKfycbzpjk_wL_PdMG4ZeIZU4IctxJZVZt5qZljmLCFtV1hhaXIT0kIGBCa4WcD8xu-hVnDSEg/exec';const API=API_URL.indexOf('__')===0?'':API_URL;
+let META=null,SNAP=null,SINRED=false;
 async function cargar(){
+ if(API){try{const r=await fetch(API+'?a=meta',{cache:'no-store'}),j=await r.json();META=(j&&j.ok&&j.salt)?j:null;SINRED=false}catch(e){META=null;SINRED=true}return}
  try{const r=await fetch('datos-padres.json',{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();META=j;SNAP=j.snap||j}catch(e){META=null;SNAP=null}
 }
 function inicio(){
+ const gen=META&&(META.generado||META.gen);
  let sv='';try{sv=localStorage.getItem('pcod')||''}catch(e){}
  $('#app').innerHTML=`<h1>🎓 Seguimiento del alumno</h1>
  <p class=muted>Ingresá el código que te entregó el docente.</p>
@@ -61,7 +65,7 @@ function inicio(){
   <input id=cd value="${esc(sv)}" placeholder="XXXX-XXXX" maxlength=9 autocomplete=off autocapitalize=characters spellcheck=false style="flex:1;min-width:150px">
   <button id=vb onclick="ver()">Ver</button></div><p id=msg role=status></p></div>
  <div id=rep></div>
- <footer class=muted>${META&&META.generado?'Datos actualizados el '+new Date(META.generado).toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}):''}<br>Si no tenés el código, pedíselo al docente del curso.</footer>`;
+ <footer class=muted>${gen?'Datos actualizados el '+new Date(gen).toLocaleString('es-AR',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}):''}<br>Si no tenés el código, pedíselo al docente del curso.</footer>`;
  $('#cd').addEventListener('keydown',e=>{if(e.key==='Enter')ver()});
  if(sv&&META)ver();
 }
@@ -69,16 +73,18 @@ async function ver(){
  const code=$('#cd').value.toUpperCase().replace(/[^A-Z0-9]/g,''),m=$('#msg'),b=$('#vb');
  if(!code){m.textContent='Escribí el código.';return}
  if(code.length!==8){m.textContent='El código tiene 8 letras y números (XXXX-XXXX).';return}
- if(!META){m.textContent='Todavía no hay información publicada.';return}
+ if(!META&&API){m.textContent='Conectando…';await cargar()}
+ if(!META){m.textContent=SINRED?'No se pudo conectar. Revisá tu conexión e intentá de nuevo.':'Todavía no hay información publicada.';return}
  b.disabled=true;m.textContent='Verificando…';
  try{
   let p=null;
-  if(META.v===2){const k=await kdf(code,ub(META.salt),META.it),e=SNAP[await idxOf(k)];if(e)p=await dec2(k,e)}
+  if(API){const k=await kdf(code,ub(META.salt),META.it),r=await fetch(API+'?a=get&k='+await idxOf(k),{cache:'no-store'}),j=await r.json();if(j&&j.ok)p=await dec2(k,{i:j.i,c:j.c})}
+  else if(META.v===2){const k=await kdf(code,ub(META.salt),META.it),e=SNAP[await idxOf(k)];if(e)p=await dec2(k,e)}
   else{const e=SNAP[await sha1('i:'+code)];if(e)p=await dec1(code,e)}
   if(!p){m.textContent='Código no encontrado. Revisalo e intentá de nuevo.';$('#rep').innerHTML='';try{localStorage.removeItem('pcod')}catch(x){}return}
   m.textContent='';try{localStorage.setItem('pcod',code)}catch(x){}
   mostrar(p);
- }catch(x){m.textContent='No se pudo abrir con ese código.';$('#rep').innerHTML=''}
+ }catch(x){m.textContent=(x&&x.name==='TypeError')?'No se pudo conectar. Revisá tu conexión e intentá de nuevo.':'No se pudo abrir con ese código.';$('#rep').innerHTML=''}
  finally{b.disabled=false}
 }
 const isN=v=>/^\d+([.,]\d+)?$/.test(String(v).trim()),nv=v=>parseFloat(String(v).replace(',','.'));
@@ -100,6 +106,7 @@ function mostrar(p){
   <div><div class=big>${p.t}</div><div class=muted>tarde</div></div></div>
   ${pc<75?'<div class=alert>⚠ La asistencia está por debajo del 75 %. Conviene hablar con el docente.</div>':''}
   ${p.last.length?`<div class=chips>${p.last.slice().reverse().map(x=>`<span class="chip ${x[1]}"><b>${{P:'P',A:'A',T:'T'}[x[1]]||''}</b><i>${fd(x[0])}</i></span>`).join('')}</div><p class=note>Últimas clases (P presente · A ausente · T tarde)</p>`:''}`}</div>`;
+ if((p.obs||[]).length)h+=`<div class=card><h2>Observaciones del docente</h2>${p.obs.map(o=>`<div class=item><span>${esc(o[1])}</span><span class=muted>${fd(o[0])}</span></div>`).join('')}</div>`;
  if(circT)h+=`<div class=card><h2>Circuitos</h2><p>Realizados: <b>${circH}</b> de <b>${circT}</b></p><div class=bar><i style="width:${circP}%"></i></div>${p.circ.map(x=>`<div class=item><span>${esc(x[0])}</span><span class="${x[1]?'ok':'muted'}">${x[1]?'✔ Hecho':'Pendiente'}</span></div>`).join('')}</div>`;
  h+=`<div class=card><h2>Notas</h2>${(p.gr||[]).length?p.gr.map(x=>`<div class=item><span>${esc(x[0])}</span>${nota(x[1])}</div>`).join(''):'<p class=muted>Sin notas cargadas aún.</p>'}</div>`;
  if(cie.length)h+=`<div class=card><h2>Cierres</h2>${cie.map(([k,v])=>`<div class=item><span>${esc(k)}</span>${nota(v)}</div>`).join('')}${p.fin!=null?`<p class=note>Promedio de las notas numéricas de los cierres: <b>${esc(p.fin)}</b></p>`:''}</div>`;
