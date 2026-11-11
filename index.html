@@ -1,119 +1,104 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow">
 <title>Seguimiento del alumno</title>
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--tx:#1b2430;--mu:#6b7686;--bd:#e1e5ea;--ac:#2a62d9;--ok:#1f9d55;--no:#d64545;--wa:#d9890f;color-scheme:light}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181e;--card:#1d232c;--tx:#e8ecf1;--mu:#93a0b1;--bd:#2c3542;--ac:#6b95f0;--ok:#43c27a;--no:#f07070;--wa:#e9a73e;color-scheme:dark}}
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b2430;--mu:#6b7686;--bd:#e1e5ea;--ac:#2a62d9;--ok:#1f9d55;--no:#d64545;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181e;--card:#1d232c;--tx:#e8ecf1;--mu:#93a0b1;--bd:#2c3542;--ac:#6b95f0;--ok:#43c27a;--no:#f07070;color-scheme:dark}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,sans-serif}
 #app{max-width:720px;margin:0 auto;padding:14px}
-h1{font-size:21px;margin:0 0 2px}h2{font-size:16px;margin:0 0 8px}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:16px;margin:0 0 6px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:10px}
 .muted{color:var(--mu);font-size:14px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 13px;text-transform:uppercase;letter-spacing:2px;font-weight:700;font-family:ui-monospace,Consolas,monospace}
-button{font:inherit;cursor:pointer;background:var(--ac);color:#fff;border:0;border-radius:10px;padding:12px 18px;font-weight:700}
-button.ghost{background:var(--card);color:var(--tx);border:1px solid var(--bd)}button:disabled{opacity:.6;cursor:wait}
-.big{font-size:30px;font-weight:700;line-height:1.1}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;text-align:center;margin-top:6px}
-.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)}.item:last-child{border:0}
+input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:11px 13px;text-transform:uppercase;letter-spacing:1px;font-weight:700;font-family:ui-monospace,Consolas,monospace}
+button{font:inherit;cursor:pointer;background:var(--ac);color:#fff;border:0;border-radius:10px;padding:11px 16px;font-weight:700}
+button.ghost{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+.big{font-size:30px;font-weight:700;line-height:1.1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;text-align:center;margin-top:8px}
+.item{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd)}
+.item:last-child{border:0}
 .ok{color:var(--ok);font-weight:600}.no{color:var(--no);font-weight:600}
-.bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:var(--ok)}
-.pill{display:inline-block;padding:3px 10px;border-radius:10px;font-size:13px;background:var(--bd);color:var(--mu);margin:2px}
-.pill.no{background:rgba(214,69,69,.15);color:var(--no)}.pill.ok{background:rgba(31,157,85,.16);color:var(--ok)}.pill.wa{background:rgba(217,137,15,.2);color:var(--wa)}
-.chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
-.chip{display:flex;flex-direction:column;align-items:center;min-width:40px;padding:3px 4px;border-radius:7px;background:var(--bd);color:var(--mu);font-size:12px}
-.chip b{font-size:14px}.chip i{font-style:normal;font-size:10px}
-.chip.P{background:var(--ok);color:#fff}.chip.A{background:var(--no);color:#fff}.chip.T{background:var(--wa);color:#fff}
-.alert{background:rgba(214,69,69,.12);border:1px solid var(--no);color:var(--no);border-radius:10px;padding:8px 10px;margin-top:10px;font-weight:600;font-size:14px}
-.note{font-size:13px;color:var(--mu);margin:6px 0 0}
-#msg{min-height:20px;font-size:14px;color:var(--mu);margin:8px 0 0}
-footer{text-align:center;margin:26px 0 10px}
-@media print{button,.noprint{display:none!important}body{background:#fff}.card{break-inside:avoid}}
+.bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--ok)}
+.pill{display:inline-block;padding:2px 8px;border-radius:9px;font-size:13px;background:var(--bd);color:var(--mu);margin:2px}
+.pill.no{background:rgba(214,69,69,.15);color:var(--no)}
+#msg{min-height:18px;font-size:13px;color:var(--mu)}
+footer{text-align:center;margin-top:30px;color:var(--mu);font-size:14px}
 </style></head><body>
 <div id="app"></div>
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyACd2JBn-8HG7r0ogwEhuVrpy4_eVkY5f0",
+  authDomain: "notas-93bb4.firebaseapp.com",
+  projectId: "notas-93bb4",
+  storageBucket: "notas-93bb4.firebasestorage.app",
+  messagingSenderId: "186336063064",
+  appId: "1:186336063064:web:a708dd17f06e8dd95b242d"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-const fd=d=>d?d.slice(8)+'/'+d.slice(5,7):'';
-const fdl=d=>d?d.slice(8)+'/'+d.slice(5,7)+'/'+d.slice(0,4):'';
+const fd=d=>d?d.slice(8)+'/'+d.slice(5,7)+'/'+d.slice(0,4).slice(2):'';
 const E=new TextEncoder(),ub=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-const hex=u=>[...u].map(x=>x.toString(16).padStart(2,'0')).join('');
-/* ---- v2: una sola derivación lenta (PBKDF2) por código; el índice y la clave salen de ella ---- */
-async function kdf(code,salt,it){const b=await crypto.subtle.importKey('raw',E.encode(code),'PBKDF2',false,['deriveBits']);return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:it,hash:'SHA-256'},b,256))}
-async function h2(k,tag){const t=E.encode(tag),m=new Uint8Array(k.length+t.length);m.set(k);m.set(t,k.length);return new Uint8Array(await crypto.subtle.digest('SHA-256',m))}
-async function idxOf(k){return hex((await h2(k,'idx')).slice(0,12))}
-async function dec2(k,e){const ek=await crypto.subtle.importKey('raw',await h2(k,'enc'),'AES-GCM',false,['decrypt']);return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(e.i)},ek,ub(e.c))))}
-/* ---- v1: formato anterior (se sigue leyendo hasta que vuelvas a publicar) ---- */
-async function sha1(s){return hex(new Uint8Array(await crypto.subtle.digest('SHA-256',E.encode(s)))).slice(0,20)}
-async function dec1(code,e){const b=await crypto.subtle.importKey('raw',E.encode(code),'PBKDF2',false,['deriveKey']);const k=await crypto.subtle.deriveKey({name:'PBKDF2',salt:ub(e.s),iterations:100000,hash:'SHA-256'},b,{name:'AES-GCM',length:256},false,['decrypt']);return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(e.i)},k,ub(e.c))))}
+async function sha(s){return[...new Uint8Array(await crypto.subtle.digest('SHA-256',E.encode(s)))].map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,20)}
+async function key(code,salt){const k=await crypto.subtle.importKey('raw',E.encode(code),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:100000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['decrypt'])}
+async function unseal(code,e){return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(e.i)},await key(code,ub(e.s)),ub(e.c))))}
 
-/* Si este archivo lo descargaste desde el panel (☁️ Nube), la dirección del servidor ya viene puesta */
-const API_URL='https://script.google.com/macros/s/AKfycbzpjk_wL_PdMG4ZeIZU4IctxJZVZt5qZljmLCFtV1hhaXIT0kIGBCa4WcD8xu-hVnDSEg/exec';const API=API_URL.indexOf('__')===0?'':API_URL;
-let META=null,SNAP=null,SINRED=false;
-async function cargar(){
- if(API){try{const r=await fetch(API+'?a=meta',{cache:'no-store'}),j=await r.json();META=(j&&j.ok&&j.salt)?j:null;SINRED=false}catch(e){META=null;SINRED=true}return}
- try{const r=await fetch('datos-padres.json',{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();META=j;SNAP=j.snap||j}catch(e){META=null;SNAP=null}
+let SNAP=null,GEN=null;
+async function loadSnap(){
+ try{const snap=await getDoc(doc(db,'datos','padres'));if(snap.exists()){const j=snap.data();SNAP=j.snap;GEN=j.generado}else{SNAP=null;GEN=null}}catch(e){SNAP=null;GEN=null}
 }
 function inicio(){
- const gen=META&&(META.generado||META.gen);
  let sv='';try{sv=localStorage.getItem('pcod')||''}catch(e){}
- $('#app').innerHTML=`<h1>🎓 Seguimiento del alumno</h1>
- <p class=muted>Ingresá el código que te entregó el docente.</p>
- <div class=card><div class=row>
-  <input id=cd value="${esc(sv)}" placeholder="XXXX-XXXX" maxlength=9 autocomplete=off autocapitalize=characters spellcheck=false style="flex:1;min-width:150px">
-  <button id=vb onclick="ver()">Ver</button></div><p id=msg role=status></p></div>
- <div id=rep></div>
- <footer class=muted>${gen?'Datos actualizados el '+new Date(gen).toLocaleString('es-AR',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}):''}<br>Si no tenés el código, pedíselo al docente del curso.</footer>`;
- $('#cd').addEventListener('keydown',e=>{if(e.key==='Enter')ver()});
- if(sv&&META)ver();
+ $('#app').innerHTML=`<h1>🎓 Seguimiento del alumno</h1><p class=muted>Ingresá el código.</p><div class=card><div class=row><input id=cd value="${esc(sv)}" placeholder="XXXX-XXXX" maxlength="9" style="flex:1"><button onclick="ver()">Ver</button></div><p id=msg></p></div><div id=rep></div><footer>${GEN?'Última actualización: '+new Date(GEN).toLocaleString('es-AR'):''}<br>Si no tenés el código, pedíselo al docente.</footer>`;
+ if(sv)ver();
 }
-async function ver(){
- const code=$('#cd').value.toUpperCase().replace(/[^A-Z0-9]/g,''),m=$('#msg'),b=$('#vb');
- if(!code){m.textContent='Escribí el código.';return}
- if(code.length!==8){m.textContent='El código tiene 8 letras y números (XXXX-XXXX).';return}
- if(!META&&API){m.textContent='Conectando…';await cargar()}
- if(!META){m.textContent=SINRED?'No se pudo conectar. Revisá tu conexión e intentá de nuevo.':'Todavía no hay información publicada.';return}
- b.disabled=true;m.textContent='Verificando…';
- try{
-  let p=null;
-  if(API){const k=await kdf(code,ub(META.salt),META.it),r=await fetch(API+'?a=get&k='+await idxOf(k),{cache:'no-store'}),j=await r.json();if(j&&j.ok)p=await dec2(k,{i:j.i,c:j.c})}
-  else if(META.v===2){const k=await kdf(code,ub(META.salt),META.it),e=SNAP[await idxOf(k)];if(e)p=await dec2(k,e)}
-  else{const e=SNAP[await sha1('i:'+code)];if(e)p=await dec1(code,e)}
-  if(!p){m.textContent='Código no encontrado. Revisalo e intentá de nuevo.';$('#rep').innerHTML='';try{localStorage.removeItem('pcod')}catch(x){}return}
-  m.textContent='';try{localStorage.setItem('pcod',code)}catch(x){}
-  mostrar(p);
- }catch(x){m.textContent=(x&&x.name==='TypeError')?'No se pudo conectar. Revisá tu conexión e intentá de nuevo.':'No se pudo abrir con ese código.';$('#rep').innerHTML=''}
- finally{b.disabled=false}
+window.ver=async()=>{
+ const code=$('#cd').value.toUpperCase().replace(/[^A-Z0-9]/g,''),m=$('#msg');
+ if(code.length!==8){m.textContent='El código tiene 8 caracteres.';return}
+ if(!SNAP){await loadSnap();if(!SNAP){m.textContent='No hay datos publicados.';return}}
+ m.textContent='Buscando…';
+ try{const h=await sha('i:'+code);const e=SNAP[h];if(!e){m.textContent='Código no encontrado.';return}const p=await unseal(code,e);m.textContent='';try{localStorage.setItem('pcod',code)}catch(x){};mostrar(p)}catch(x){m.textContent='Código no válido.'}
 }
-const isN=v=>/^\d+([.,]\d+)?$/.test(String(v).trim()),nv=v=>parseFloat(String(v).replace(',','.'));
-function nota(v){if(isN(v))return`<b class="${nv(v)<6?'no':''}">${esc(v)}</b>`;const u=String(v).toUpperCase();
- if(u==='TEA')return'<span class="pill ok">TEA</span>';if(u==='TEP')return'<span class="pill wa">TEP</span>';
- if(u==='A')return'<span class=muted>Ausente</span>';if(u==='X')return'<span class=ok>✔</span>';return`<b>${esc(v)}</b>`}
-function recLegacy(p){const g={};(p.gr||[]).forEach(x=>{const t=String(x[0]).split(' · ')[0];(g[t]=g[t]||[]).push(x[1])});
- return Object.keys(g).filter(t=>{const n=g[t].filter(isN).map(nv);return n.length&&Math.max(...n)<6})}
 function mostrar(p){
- const tot=p.p+p.a+p.t,pc=tot?Math.round((p.p+p.t)/tot*100):null;
- const circH=(p.circ||[]).filter(x=>x[1]).length,circT=(p.circ||[]).length,circP=circT?Math.round(circH/circT*100):0;
- const rec=Array.isArray(p.rec)?p.rec:recLegacy(p);
- const cie=Object.entries(p.cie||{}).filter(([k,v])=>v!==''&&v!=null&&v!=='-');
- let h=`<h1>${esc(p.n)}</h1><p class=muted style="margin-bottom:10px">${esc(p.c)}${p.m?' · '+esc(p.m):''} · actualizado ${fdl(p.u)}</p>`;
- h+=`<div class=card><h2>Asistencia</h2>${pc===null?'<p class=muted>Todavía no hay clases registradas.</p>':`<div class=grid>
-  <div><div class="big ${pc<75?'no':pc<85?'':'ok'}" style="${pc>=75&&pc<85?'color:var(--wa)':''}">${pc}%</div><div class=muted>asistencia</div></div>
-  <div><div class=big>${p.p}</div><div class=muted>presentes</div></div>
-  <div><div class="big ${p.a?'no':''}">${p.a}</div><div class=muted>ausentes</div></div>
-  <div><div class=big>${p.t}</div><div class=muted>tarde</div></div></div>
-  ${pc<75?'<div class=alert>⚠ La asistencia está por debajo del 75 %. Conviene hablar con el docente.</div>':''}
-  ${p.last.length?`<div class=chips>${p.last.slice().reverse().map(x=>`<span class="chip ${x[1]}"><b>${{P:'P',A:'A',T:'T'}[x[1]]||''}</b><i>${fd(x[0])}</i></span>`).join('')}</div><p class=note>Últimas clases (P presente · A ausente · T tarde)</p>`:''}`}</div>`;
- if((p.obs||[]).length)h+=`<div class=card><h2>Observaciones del docente</h2>${p.obs.map(o=>`<div class=item><span>${esc(o[1])}</span><span class=muted>${fd(o[0])}</span></div>`).join('')}</div>`;
- if(circT)h+=`<div class=card><h2>Circuitos</h2><p>Realizados: <b>${circH}</b> de <b>${circT}</b></p><div class=bar><i style="width:${circP}%"></i></div>${p.circ.map(x=>`<div class=item><span>${esc(x[0])}</span><span class="${x[1]?'ok':'muted'}">${x[1]?'✔ Hecho':'Pendiente'}</span></div>`).join('')}</div>`;
- h+=`<div class=card><h2>Notas</h2>${(p.gr||[]).length?p.gr.map(x=>`<div class=item><span>${esc(x[0])}</span>${nota(x[1])}</div>`).join(''):'<p class=muted>Sin notas cargadas aún.</p>'}</div>`;
- if(cie.length)h+=`<div class=card><h2>Cierres</h2>${cie.map(([k,v])=>`<div class=item><span>${esc(k)}</span>${nota(v)}</div>`).join('')}${p.fin!=null?`<p class=note>Promedio de las notas numéricas de los cierres: <b>${esc(p.fin)}</b></p>`:''}</div>`;
- if(rec.length)h+=`<div class=card><h2>Temas a recuperar</h2><p class=muted>Temas ya evaluados en el curso donde la mejor nota todavía no llega a 6.</p>${rec.map(t=>`<span class="pill no">${esc(t)}</span>`).join('')}</div>`;
- h+=`<div class="card noprint" style="text-align:center"><div class=row style="justify-content:center"><button class=ghost onclick="print()">Imprimir</button><button class=ghost onclick="salir()">Consultar otro código</button></div></div>`;
- $('#rep').innerHTML=h;
+ const tot=p.p+p.a+p.t,pc=tot?Math.round((p.p+p.t)/tot*100):0;
+ let h=`<h1>${esc(p.n)}</h1><p class=muted style="margin-bottom:10px">${esc(p.c)} · ${fd(p.u)}</p>`;
+ h+=`<div class=card><h2>Asistencia</h2><div class=grid><div><div class="big ${pc<75?'no':'ok'}">${pc}%</div><div class=muted>asistencia</div></div><div><div class=big>${p.p}</div><div class=muted>presentes</div></div><div><div class="big no">${p.a}</div><div class=muted>ausentes</div></div><div><div class=big>${p.t}</div><div class=muted>tarde</div></div></div><p class=muted style="margin-top:10px">Últimos días: ${p.last.map(x=>fd(x[0])+' '+({P:'✔',A:'✘',T:'⏱'}[x[1]]||'')).join(' · ')||'—'}</p></div>`;
+ (p.materias||[]).forEach(m=>{
+  h+=`<div class=card><h2>${esc(m.nombre)}</h2>`;
+  if(m.circuitos&&m.circuitos.length){
+   const he=m.circuitos.filter(x=>x[1]).length,tot=m.circuitos.length;
+   h+=`<p>Circuitos: <b>${he}</b> de <b>${tot}</b></p><div class=bar><i style="width:${tot?Math.round(he/tot*100):0}%"></i></div>`;
+   h+=m.circuitos.map(x=>`<div class=item><span>${esc(x[0])}</span><span class="${x[1]?'ok':'muted'}">${x[1]?'✔':'Pendiente'}</span></div>`).join('');
+  }
+  if(m.notas&&m.notas.length){
+   h+=`<div style="margin-top:8px"><b>Notas</b></div>`;
+   h+=m.notas.map(x=>`<div class=item><span>${esc(x[0])}</span><b>${esc(x[1])}</b></div>`).join('');
+  }else h+='<p class=muted>Sin notas.</p>';
+  if(m.practicas&&m.practicas.length){
+   m.practicas.forEach(pr=>{
+    const hechas=pr.partes.filter(Boolean).length;
+    h+=`<div style="margin-top:10px"><b>${esc(pr.nombre)}</b>: ${hechas}/${pr.total}</div><div class=bar><i style="width:${Math.round(hechas/pr.total*100)}%"></i></div><div class=row style="flex-wrap:wrap;margin-top:4px">`;
+    pr.partes.forEach((ok,i)=>h+=`<span class="pill ${ok?'':'no'}">P${i+1}</span>`);
+    h+='</div>';
+   });
+  }
+  if(m.cierres&&Object.keys(m.cierres).length){
+   h+='<div style="margin-top:10px"><b>Cierres</b></div>';
+   h+=Object.entries(m.cierres).map(([k,v])=>`<div class=item><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
+  }
+  h+='</div>';
+ });
+ h+=`<div class=card style="text-align:center"><button class=ghost onclick="salir()">Consultar otro código</button></div>`;
+ $('#app').innerHTML=h;
 }
-function salir(){try{localStorage.removeItem('pcod')}catch(e){}inicio()}
-(async()=>{await cargar();inicio()})();
+window.salir=()=>{try{localStorage.removeItem('pcod')}catch(e){}$('#app').innerHTML='';inicio()}
+(async()=>{await loadSnap();inicio()})();
 </script></body></html>
