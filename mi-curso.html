@@ -59,13 +59,24 @@ th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:
 .pl-btn.P{background:var(--ok);color:#fff;border-color:var(--ok)}
 .pl-btn.A{background:var(--no);color:#fff;border-color:var(--no)}
 .pl-btn.T{background:var(--wa);color:#fff;border-color:var(--wa)}
+
+/* Menú desplegable de acciones */
+#menuBtn{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+#menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.18);min-width:260px;padding:6px;z-index:50;display:none}
+#menu.on{display:block}
+#menu .sec{padding:6px 10px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-top:4px}
+#menu button{display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:transparent;color:var(--tx);border:0;border-radius:8px;padding:9px 10px;font-weight:500;cursor:pointer}
+#menu button:hover{background:var(--bd)}
+#menu .sep{height:1px;background:var(--bd);margin:4px 0}
+#menu .estado{padding:6px 10px;font-size:12px;color:var(--mu)}
+header .menuWrap{position:relative}
 @media print{.tabs,header,button,.noprint{display:none!important}.wrap{overflow:visible}}
 </style></head><body>
 <div id="app"></div>
 <div id="toast"></div>
 <div id="modal" onclick="if(event.target===this)closeModal()"><div class="box"><button class="x" onclick="closeModal()" title="Cerrar">✕</button><div id="modalBox"></div></div></div>
 <script>
-console.log('Mi curso v6-materias cargado');
+console.log('Mi curso v6.1 cargado');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 const KEY='micurso-v5';
@@ -139,6 +150,20 @@ function toggleEdit(){
 }
 window.toggleEdit = toggleEdit;
 
+function abrirMenu(e){
+ if(e){e.preventDefault();e.stopPropagation();}
+ const m=$('#menu');if(!m)return;
+ m.classList.toggle('on');
+}
+window.abrirMenu = abrirMenu;
+document.addEventListener('click',e=>{
+ const m=$('#menu');
+ if(!m)return;
+ if(!m.classList.contains('on'))return;
+ const w=m.closest('.menuWrap');
+ if(w&&!w.contains(e.target))m.classList.remove('on');
+});
+
 function render(){
  const app=$('#app');
  try{
@@ -147,14 +172,25 @@ function render(){
   if(!c){app.innerHTML='<div class=card><b>No hay cursos.</b><p class=muted>Creá uno nuevo o recuperá el último con Deshacer.</p><div class=row><button onclick="nuevoAnio()">➕ Crear curso</button><button class=ghost onclick="undo()">↶ Deshacer</button><button class=ghost onclick="openImportJSON()">📂 Cargar JSON</button></div></div>';return}
   let h=`<header><h1>🎓 Mi curso</h1><div class=row>
    ${D.cursos.length?`<select onchange="cur=+this.value;render()">${D.cursos.map((x,i)=>`<option value=${i} ${i==cur?'selected':''}>${esc(x.nombre)} (${x.anio})</option>`).join('')}</select>`:''}
-   <button class=ghost onclick="expJSON()">⬇ Exportar JSON</button>
-   <button class=ghost id=nubeChip onclick="openNube()">${nubeTxt()}</button>
-   <button class=ghost onclick="publicarPadres()">📤 Publicar para padres</button>
-   <button class=ghost onclick="openImportXlsx()">📥 Importar Excel</button>
-   <button class=ghost onclick="openImportJSON()">📂 Cargar JSON</button>
-   <button class=ghost onclick="nuevoAnio()">📅 Nuevo curso / año</button>
-   <button class=ghost onclick="undo()">↶ Deshacer</button>
    <button class=ghost onclick="toggleEdit()">${edit?'✏️ Editando':'🔒 Ver'}</button>
+   <div class=menuWrap style="position:relative">
+    <button id=menuBtn onclick="abrirMenu(event)" title="Menú">⚙️</button>
+    <div id=menu>
+     <div class=sec>Datos</div>
+     <button onclick="closeMenu();expJSON()">⬇ Exportar JSON</button>
+     <button onclick="closeMenu();openImportXlsx()">📥 Importar Excel</button>
+     <button onclick="closeMenu();openImportJSON()">📂 Cargar JSON</button>
+     <button onclick="closeMenu();nuevoAnio()">📅 Nuevo curso / año</button>
+     <div class=sep></div>
+     <div class=sec>Publicación</div>
+     <button onclick="closeMenu();publicarPadres()">📤 Publicar para padres</button>
+     <div class=sep></div>
+     <div class=sec>Nube</div>
+     <button onclick="closeMenu();openNube()">☁️ ${nubeOK()?'Configurar / estado de la nube':'Conectar la nube'}</button>
+     <div class=estado>${nubeOK()?esc(nubeEstado||'Conectada'):'Sin conectar'}</div>
+    </div>
+   </div>
+   <button class=ghost onclick="undo()" title="Deshacer último cambio">↶</button>
   </div></header>`;
   h+=bannerBackup();
   h+=`<div class=tabs>${[['asist','Asistencia'],['circ','Circuitos'],['eval','Evaluaciones'],['cie','Cierres'],['obs','Observaciones'],['alum','Alumnos'],['rep','Reportes'],['pad','Padres']].map(([k,l])=>`<button class="${tab==k?'on':''}" onclick="setTab('${k}')">${l}</button>`).join('')}</div>`;
@@ -167,6 +203,8 @@ function render(){
   h+=body;app.innerHTML=h;
  }catch(e){console.error('Error general de render',e);app.innerHTML='<div class=card style="border-color:var(--no)"><b style="color:var(--no)">Error al dibujar la app</b><div class=muted>'+esc(e&&e.message||String(e))+'</div></div>'}
 }
+function closeMenu(){const m=$('#menu');if(m)m.classList.remove('on')}
+window.closeMenu=closeMenu;
 
 // ============ ASISTENCIA ============
 let asisFiltro='';
@@ -286,7 +324,7 @@ function vCie(c){
 function setC(id,k,el){if(!edit){toast('Activá edición');return}pushH();const c=C();c.cierres=c.cierres||{};c.cierres[id]=c.cierres[id]||{};const v=String(el.value).trim();el.value=v;if(v==='')delete c.cierres[id][k];else c.cierres[id][k]=v;el.className='num '+gcls(v);const f=cierreFinal(c,id),a=document.getElementById('cf-'+id),b=document.getElementById('ce-'+id);if(a)a.textContent=f.prom!=null?f.prom:'—';if(b)b.innerHTML=chipE(f.estado);save()}
 function setCM(id,mid,k,el){if(!edit){toast('Activá edición');return}pushH();const c=C();c.cierres=c.cierres||{};c.cierres[id]=c.cierres[id]||{};const key=mid+'_'+k;const v=String(el.value).trim();el.value=v;if(v==='')delete c.cierres[id][key];else c.cierres[id][key]=v;el.className='num '+gcls(v);const m=(c.materias||[]).find(x=>x.id===mid);const f=cierreFinalMateria(c,id,m),a=document.getElementById('cf-'+id+'-'+mid),b=document.getElementById('ce-'+id+'-'+mid);if(a)a.textContent=f.prom!=null?f.prom:'—';if(b)b.innerHTML=chipE(f.estado);save()}
 
-// ============ ALUMNOS (con eliminar alumno) ============
+// ============ ALUMNOS ============
 function vAlum(c){
  let h=`<div class=card><b>Alumnos (${(c.alumnos||[]).length})</b></div><div class=card>`;
  (c.alumnos||[]).forEach(s=>{
@@ -351,22 +389,21 @@ const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let NB=lsGet(NK,null),nubeEstado='',nubeTimer=null,nubeBusy=false,_ek=null;
 const nubeOK=()=>!!(NB&&NB.url&&NB.token);
 const nubeTxt=()=>nubeOK()?'☁️ '+(nubeEstado||'Conectada'):'☁️ Nube';
-function pintaNube(){const e=document.getElementById('nubeChip');if(e)e.textContent=nubeTxt()}
 const pubUb=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function pubOpen(k,e){const ek=await crypto.subtle.importKey('raw',await pubH(k,'enc'),'AES-GCM',false,['decrypt']);return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:pubUb(e.i)},ek,pubUb(e.c))))}
 async function apiPost(a,body){const r=await fetch(NB.url,{method:'POST',body:JSON.stringify(Object.assign({t:NB.token,a},body||{}))});try{return await r.json()}catch(e){throw new Error('el servidor no respondió como se esperaba (revisá que el acceso sea “Cualquier persona”)')}}
 async function hashStr(s){return pubHex(new Uint8Array(await crypto.subtle.digest('SHA-256',PUB_E.encode(s)))).slice(0,16)}
 async function nubeKey(code){let kc=lsGet(KC,{});if(kc.salt!==NB.salt||kc.it!==NB.it)kc={salt:NB.salt,it:NB.it,k:{}};if(!kc.k[code]){kc.k[code]=pubB64(await pubKdf(code,pubUb(NB.salt),NB.it));lsSet(KC,kc)}return pubUb(kc.k[code])}
 async function estadoKey(){if(!_ek)_ek=await pubKdf(NB.token,PUB_E.encode('micurso-estado'),300000);return _ek}
-function programarSync(){if(!nubeOK()||!NB.auto||!D)return;nubeEstado='Pendiente…';pintaNube();clearTimeout(nubeTimer);nubeTimer=setTimeout(()=>publicarNube(false),6000)}
+function programarSync(){if(!nubeOK()||!NB.auto||!D)return;nubeEstado='Pendiente…';clearTimeout(nubeTimer);nubeTimer=setTimeout(()=>publicarNube(false),6000)}
 async function nubeGuardarEstado(force){const k=await estadoKey(),blob=JSON.stringify(await pubSeal(k,D)),r=await apiPost('save',{blob,base:NB.lastState||'',force:!!force});if(r.ok){NB.lastState=r.ts;lsSet(NK,NB);return 'ok'}if(r.err==='conflicto')return 'conflicto';throw new Error(r.err==='clave'?'la clave no coincide con la del servidor':(r.err||'no se pudo guardar la copia'))}
-async function publicarNube(modo){if(!nubeOK()||!D||nubeBusy)return;nubeBusy=true;nubeEstado='Sincronizando…';pintaNube();try{if(await nubeGuardarEstado(false)==='conflicto'){nubeEstado='⚠ Conflicto';toast('La nube tiene datos más nuevos de otro dispositivo. Abrí ☁️ y elegí Restaurar o Sobrescribir.');return}const lista=[];D.cursos.forEach(c=>(c.alumnos||[]).forEach(s=>{if(s.codigo&&!s.baja)lista.push([c,s])}));const ph=lsGet(PH,{}),nuevos={},items={},keep=[];let n=0;for(const[c,s]of lista){const kc=lsGet(KC,{});if(!(kc.salt===NB.salt&&kc.it===NB.it&&kc.k&&kc.k[s.codigo])){nubeEstado='Preparando '+(++n)+'…';pintaNube()}const k=await nubeKey(s.codigo),idx=await pubIdx(k),pl=pubPayload(c,s),h=await hashStr(JSON.stringify(Object.assign({},pl,{u:''})));keep.push(idx);nuevos[idx]=h;if(modo==='todo'||ph[idx]!==h)items[idx]=await pubSeal(k,pl)}const r=await apiPost('pub',{salt:NB.salt,it:NB.it,items,keep});if(!r.ok)throw new Error(r.err==='clave'?'la clave no coincide con la del servidor':(r.err||'respuesta inválida'));lsSet(PH,nuevos);nubeEstado='Sincronizado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});if(modo)toast('Listo: '+Object.keys(items).length+' alumnos actualizados en la nube')}catch(e){console.error(e);nubeEstado='Error de conexión';if(modo)toast('No se pudo sincronizar: '+(e&&e.message||e))}finally{nubeBusy=false;pintaNube()}}
+async function publicarNube(modo){if(!nubeOK()||!D||nubeBusy)return;nubeBusy=true;nubeEstado='Sincronizando…';try{if(await nubeGuardarEstado(false)==='conflicto'){nubeEstado='⚠ Conflicto';toast('La nube tiene datos más nuevos de otro dispositivo. Abrí ☁️ y elegí Restaurar o Sobrescribir.');return}const lista=[];D.cursos.forEach(c=>(c.alumnos||[]).forEach(s=>{if(s.codigo&&!s.baja)lista.push([c,s])}));const ph=lsGet(PH,{}),nuevos={},items={},keep=[];let n=0;for(const[c,s]of lista){const kc=lsGet(KC,{});if(!(kc.salt===NB.salt&&kc.it===NB.it&&kc.k&&kc.k[s.codigo])){nubeEstado='Preparando '+(++n)+'…'}const k=await nubeKey(s.codigo),idx=await pubIdx(k),pl=pubPayload(c,s),h=await hashStr(JSON.stringify(Object.assign({},pl,{u:''})));keep.push(idx);nuevos[idx]=h;if(modo==='todo'||ph[idx]!==h)items[idx]=await pubSeal(k,pl)}const r=await apiPost('pub',{salt:NB.salt,it:NB.it,items,keep});if(!r.ok)throw new Error(r.err==='clave'?'la clave no coincide con la del servidor':(r.err||'respuesta inválida'));lsSet(PH,nuevos);nubeEstado='Sincronizado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});if(modo)toast('Listo: '+Object.keys(items).length+' alumnos actualizados en la nube')}catch(e){console.error(e);nubeEstado='Error de conexión';if(modo)toast('No se pudo sincronizar: '+(e&&e.message||e))}finally{nubeBusy=false}}
 async function nubeRestaurar(){if(!nubeOK()){toast('Primero guardá la conexión');return}try{const r=await apiPost('state');if(!r.ok||!r.blob){toast('Todavía no hay una copia guardada en la nube');return}let o;try{o=await pubOpen(await estadoKey(),JSON.parse(r.blob))}catch(e){throw new Error('la clave no corresponde a esta copia')}if(!o||!Array.isArray(o.cursos))throw new Error('copia inválida');if(!confirm('¿Reemplazar los datos de ESTE dispositivo por la copia de la nube ('+new Date(r.ts).toLocaleString('es-AR')+')? Se puede deshacer con ↶.'))return;if(D)pushH();D=o;cur=0;NB.lastState=r.ts;lsSet(NK,NB);save();render();closeModal();toast('Datos restaurados desde la nube')}catch(e){toast('No se pudo restaurar: '+(e&&e.message||e))}}
 async function nubeSobrescribir(){if(!confirm('¿Reemplazar la copia de la nube con los datos de ESTE dispositivo?'))return;try{await nubeGuardarEstado(true);toast('La nube ahora tiene los datos de este dispositivo');publicarNube('todo')}catch(e){toast('No se pudo: '+(e&&e.message||e))}}
 function nubeGenClave(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';document.getElementById('nbTok').value=Array.from(crypto.getRandomValues(new Uint8Array(24))).map(x=>A[x%A.length]).join('')}
 async function nubeCopiarCodigo(){if(!document.getElementById('nbTok').value.trim())nubeGenClave();const code=CODE_GS.replace('__TOKEN__',()=>document.getElementById('nbTok').value.trim());try{await navigator.clipboard.writeText(code);toast('Código copiado. Pegalo en Apps Script.')}catch(e){const b=document.getElementById('nbCode');b.style.display='block';b.value=code;b.select();toast('Copiá el texto que apareció abajo')}}
 function nubeDescargarIndex(){const html=PADRES_TPL.replace('__API_URL__',()=>NB.url),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.download='index.html';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast('Descargado index.html: subilo a tu sitio web')}
-async function nubeGuardarConfig(){const url=document.getElementById('nbUrl').value.trim(),token=document.getElementById('nbTok').value.trim();if(!/^https:\/\/script\.google\.com\/.+/.test(url)){toast('La URL debe empezar con https://script.google.com/…');return}if(token.length<12){toast('La clave es muy corta: tocá Generar');return}const p=NB||{};NB={url,token,auto:document.getElementById('nbAuto').checked,salt:p.salt||pubB64(crypto.getRandomValues(new Uint8Array(16))),it:p.it||600000,lastState:(p.token===token&&p.url===url)?(p.lastState||''):''};lsSet(NK,NB);_ek=null;try{const r=await apiPost('ping');if(!r.ok)throw new Error(r.err==='clave'?'la clave no coincide con la que pegaste en el servidor':(r.err||'sin respuesta'));nubeEstado='Conectada';pintaNube();toast('Conexión correcta ✔');openNube()}catch(e){toast('No se pudo conectar: '+(e&&e.message||e))}}
+async function nubeGuardarConfig(){const url=document.getElementById('nbUrl').value.trim(),token=document.getElementById('nbTok').value.trim();if(!/^https:\/\/script\.google\.com\/.+/.test(url)){toast('La URL debe empezar con https://script.google.com/…');return}if(token.length<12){toast('La clave es muy corta: tocá Generar');return}const p=NB||{};NB={url,token,auto:document.getElementById('nbAuto').checked,salt:p.salt||pubB64(crypto.getRandomValues(new Uint8Array(16))),it:p.it||600000,lastState:(p.token===token&&p.url===url)?(p.lastState||''):''};lsSet(NK,NB);_ek=null;try{const r=await apiPost('ping');if(!r.ok)throw new Error(r.err==='clave'?'la clave no coincide con la que pegaste en el servidor':(r.err||'sin respuesta'));nubeEstado='Conectada';toast('Conexión correcta ✔');openNube()}catch(e){toast('No se pudo conectar: '+(e&&e.message||e))}}
 function nubeDesconectar(){if(!confirm('¿Desconectar la nube de este dispositivo? Tus datos locales no se borran.'))return;NB=null;try{localStorage.removeItem(NK);localStorage.removeItem(KC);localStorage.removeItem(PH)}catch(e){}nubeEstado='';render();closeModal();toast('Nube desconectada')}
 function openNube(){
  const n=NB||{url:'',token:'',auto:true},ok=nubeOK();
