@@ -89,6 +89,7 @@ const fd=d=>d?d.slice(8)+'/'+d.slice(5,7)+'/'+d.slice(0,4).slice(2):'';
 const fc=c=>c?c.slice(0,4)+'-'+c.slice(4):'';
 let D=null,cur=0,tab='asist',edit=false,timer;
 let HIST=[];
+let listaFecha='',listaDraft=null,listaInicial={},listaTeniaFecha=false;
 const C=()=>D.cursos[cur];
 const catArr=()=>Object.values(D.circuitos||{}).sort((a,b)=>a.nro-b.nro);
 const APROB=7;
@@ -240,6 +241,7 @@ function render(){
 
 // Asistencia
 let asisFiltro='';
+function listasIguales(a,b){const ka=Object.keys(a).sort(),kb=Object.keys(b).sort();return ka.length===kb.length&&ka.every((k,i)=>k===kb[i]&&a[k]===b[k])}
 function vAsist(c){
  const fechas=Object.keys(c.asistencia||{}).sort();
  const total=(c.alumnos||[]).length;
@@ -253,10 +255,12 @@ function vAsist(c){
 function setA(f,id){if(!edit){toast('Activá edición');return}pushH();const c=C();c.asistencia=c.asistencia||{};c.asistencia[f]=c.asistencia[f]||{};const o=['','P','A','T'];const cur=c.asistencia[f][id]||'';c.asistencia[f][id]=o[(o.indexOf(cur)+1)%4];if(!c.asistencia[f][id])delete c.asistencia[f][id];save();render()}
 function nuevaClase(){if(!edit){toast('Activá edición');return}const f=(asisFiltro||($('#asisFecha')&&$('#asisFecha').value)||td()).slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(f)){toast('Fecha inválida');return}const c=C();c.asistencia=c.asistencia||{};if(c.asistencia[f]){toast('Esa fecha ya existe');asisFiltro=f;render();return}pushH();c.asistencia[f]={};asisFiltro=f;save();render();toast('Clase '+fd(f)+' agregada')}
 function delFecha(f){if(!edit){toast('Activá edición');return}if(!confirm('¿Borrar la clase del '+fd(f)+' y sus marcas?'))return;pushH();delete C().asistencia[f];if(asisFiltro===f)asisFiltro='';save();render()}
-function pasarListaHoy(){if(!edit){toast('Activá edición');return}const f=td();const c=C();c.asistencia=c.asistencia||{};if(!c.asistencia[f]){pushH();c.asistencia[f]={}}asisFiltro=f;const alumnos=(c.alumnos||[]).slice();const day=c.asistencia[f]||{};let html=`<h2>Pasar lista — ${fd(f)}</h2><p class=muted>Marcá P / A / T por alumno.</p><div class=row style="margin-bottom:8px"><button class=ghost onclick="marcarTodos('P')">Todos P</button><button class=ghost onclick="marcarTodos('A')">Todos A</button><button class=ghost onclick="marcarTodos('T')">Todos T</button><button class=ghost onclick="limpiarDia()">Limpiar</button></div><div style="max-height:60vh;overflow:auto">`;alumnos.forEach(s=>{const v=day[s.id]||'';html+=`<div class="pl-row" data-id="${s.id}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)"><span style="flex:1;padding-right:8px">${esc(s.nombre)}</span><span class=row style="gap:4px"><button class="pl-btn ${v==='P'?'P':''}" data-v="P" onclick="markPL('${s.id}','P')">P</button><button class="pl-btn ${v==='A'?'A':''}" data-v="A" onclick="markPL('${s.id}','A')">A</button><button class="pl-btn ${v==='T'?'T':''}" data-v="T" onclick="markPL('${s.id}','T')">T</button></span></div>`});html+=`</div><div class=row style="margin-top:10px"><button onclick="closeModal();render()">Guardar y cerrar</button><button class=ghost onclick="closeModal();render()">Cancelar</button></div>`;$('#modalBox').innerHTML=html;$('#modal').classList.add('on')}
-function markPL(id,val){const f=td();const c=C();c.asistencia=c.asistencia||{};c.asistencia[f]=c.asistencia[f]||{};if(c.asistencia[f][id]===val)delete c.asistencia[f][id];else c.asistencia[f][id]=val;save();const row=document.querySelector(`.pl-row[data-id="${id}"]`);if(row){const actual=c.asistencia[f][id]||'';row.querySelectorAll('.pl-btn').forEach(b=>b.classList.toggle(b.dataset.v,b.dataset.v===actual))}}
-function marcarTodos(v){const f=td();const c=C();c.asistencia=c.asistencia||{};c.asistencia[f]=c.asistencia[f]||{};(c.alumnos||[]).forEach(s=>{if(v===''||v==null)delete c.asistencia[f][s.id];else c.asistencia[f][s.id]=v});save();document.querySelectorAll('.pl-row').forEach(row=>{const id=row.dataset.id;const actual=c.asistencia[f][id]||'';row.querySelectorAll('.pl-btn').forEach(b=>b.classList.toggle(b.dataset.v,b.dataset.v===actual))})}
+function pasarListaHoy(){if(!edit){toast('Activá edición');return}const f=td();const c=C();const day=(c.asistencia||{})[f]||{};listaFecha=f;listaDraft=Object.assign({},day);listaInicial=Object.assign({},day);listaTeniaFecha=Object.prototype.hasOwnProperty.call(c.asistencia||{},f);asisFiltro=f;const alumnos=(c.alumnos||[]).slice();let html=`<h2>Pasar lista — ${fd(f)}</h2><p class=muted>Marcá P / A / T por alumno.</p><div class=row style="margin-bottom:8px"><button class=ghost onclick="marcarTodos('P')">Todos P</button><button class=ghost onclick="marcarTodos('A')">Todos A</button><button class=ghost onclick="marcarTodos('T')">Todos T</button><button class=ghost onclick="limpiarDia()">Limpiar</button></div><div style="max-height:60vh;overflow:auto">`;alumnos.forEach(s=>{const v=day[s.id]||'';html+=`<div class="pl-row" data-id="${s.id}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)"><span style="flex:1;padding-right:8px">${esc(s.nombre)}</span><span class=row style="gap:4px"><button class="pl-btn ${v==='P'?'P':''}" data-v="P" onclick="markPL('${s.id}','P')">P</button><button class="pl-btn ${v==='A'?'A':''}" data-v="A" onclick="markPL('${s.id}','A')">A</button><button class="pl-btn ${v==='T'?'T':''}" data-v="T" onclick="markPL('${s.id}','T')">T</button></span></div>`});html+=`</div><div class=row style="margin-top:10px"><button onclick="guardarLista()">Guardar y cerrar</button><button class=ghost onclick="cancelarLista()">Cancelar</button></div>`;$('#modalBox').innerHTML=html;$('#modal').classList.add('on')}
+function markPL(id,val){if(!edit||!listaDraft)return;const actual=listaDraft[id]||'';if(actual===val)delete listaDraft[id];else listaDraft[id]=val;const row=document.querySelector(`.pl-row[data-id="${id}"]`);if(row){const nuevo=listaDraft[id]||'';row.querySelectorAll('.pl-btn').forEach(b=>b.classList.toggle(b.dataset.v,b.dataset.v===nuevo))}}
+function marcarTodos(v){if(!edit||!listaDraft)return;(C().alumnos||[]).forEach(s=>{if(v===''||v==null)delete listaDraft[s.id];else listaDraft[s.id]=v});document.querySelectorAll('.pl-row').forEach(row=>{const actual=listaDraft[row.dataset.id]||'';row.querySelectorAll('.pl-btn').forEach(b=>b.classList.toggle(b.dataset.v,b.dataset.v===actual))})}
 function limpiarDia(){marcarTodos('')}
+function guardarLista(){if(!edit||!listaDraft){toast('Activá edición');return}const c=C();if(!listasIguales(listaDraft,listaInicial)){pushH();c.asistencia=c.asistencia||{};if(listaTeniaFecha||Object.keys(listaDraft).length)c.asistencia[listaFecha]=listaDraft;else delete c.asistencia[listaFecha];save()}listaDraft=null;listaInicial={};listaFecha='';listaTeniaFecha=false;closeModal();render()}
+function cancelarLista(){listaDraft=null;listaInicial={};listaFecha='';listaTeniaFecha=false;closeModal();render()}
 function abrirCompletar(){if(!edit){toast('Activá edición');return}const c=C();const fechas=Object.keys(c.asistencia||{}).sort();const ult=fechas[fechas.length-1]||td();$('#modalBox').innerHTML=`<h2>Completar semanas</h2><p class=muted>Agrega todas las fechas que falten entre el rango.</p><div class=row style="margin:8px 0"><label>Desde <input type=date id=desde value="${ult}"></label><label>Hasta <input type=date id=hasta value="2026-12-30"></label><label>Cada <input type=number id=paso value=7 min=1 max=30 style="width:60px"> días</label></div><div class=row><button onclick="doCompletar()">Agregar faltantes</button><button class=ghost onclick="closeModal()">Cancelar</button></div><div id=compPv class=muted style="margin-top:8px"></div>`;$('#modal').classList.add('on')}
 function doCompletar(){const c=C();c.asistencia=c.asistencia||{};const desde=$('#desde').value,hasta=$('#hasta').value,paso=parseInt($('#paso').value)||7;if(!/^\d{4}-\d{2}-\d{2}$/.test(desde)||!/^\d{4}-\d{2}-\d{2}$/.test(hasta)){toast('Fechas inválidas');return}if(desde>hasta){toast('Rango invertido');return}let d=new Date(desde+'T12:00:00');const fin=new Date(hasta+'T12:00:00');const nuevas=[];let guard=0;while(d<=fin&&guard<400){const s=d.toISOString().slice(0,10);if(!c.asistencia[s])nuevas.push(s);d.setDate(d.getDate()+paso);guard++}if(!nuevas.length){$('#compPv').textContent='No hay fechas faltantes.';return}if(!confirm('Agregar '+nuevas.length+' fechas nuevas?'))return;pushH();nuevas.forEach(s=>c.asistencia[s]={});save();closeModal();render();toast('Agregadas '+nuevas.length+' clases')}
 
@@ -270,7 +274,7 @@ function vCirc(c){
  h+='</tbody></table></div>';h+=`<div class=card><b>Leyenda</b><div class=legend>${cats.map(x=>`<div><b>${x.nro}</b> — ${esc(x.nombre)}</div>`).join('')}</div></div>`;return h;
 }
 function tgC(id,cidv){if(!edit){toast('Activá edición');return}const c=C();const al=(c.alumnos||[]).find(x=>x.id===id);const cat=D.circuitos?D.circuitos[cidv]:null;const nombreCi=cat?cat.nro+' — '+cat.nombre:cidv;const hechos=(c.circuitosHechos&&c.circuitosHechos[id])?c.circuitosHechos[id]:[];const yaEsta=hechos.includes(cidv);if(!confirm('¿'+(yaEsta?'Desmarcar':'Marcar')+' "'+nombreCi+'" para '+al.nombre+'?'))return;pushH();c.circuitosHechos=c.circuitosHechos||{};c.circuitosHechos[id]=c.circuitosHechos[id]||[];const i=c.circuitosHechos[id].indexOf(cidv);if(i>=0)c.circuitosHechos[id].splice(i,1);else c.circuitosHechos[id].push(cidv);save();render()}
-function intercambiar25y26(){if(!edit){toast('Activá edición');return}if(!confirm('¿Intercambiar los circuitos 25 y 26 en TODOS los cursos?'))return;let cambiados=0;D.cursos.forEach(c=>{if(!c.circuitosHechos)return;Object.keys(c.circuitosHechos).forEach(alId=>{const arr=c.circuitosHechos[alId]||[];const tiene25=arr.includes('c25');const tiene26=arr.includes('c26');if(tiene25===tiene26)return;if(tiene25)c.circuitosHechos[alId]=arr.filter(x=>x!=='c25').concat('c26');else c.circuitosHechos[alId]=arr.filter(x=>x!=='c26').concat('c25');cambiados++})});if(!cambiados){toast('No había 25/26 para intercambiar');return}pushH();save();render();toast('Intercambiados 25↔26 en '+cambiados+' alumnos')}
+function intercambiar25y26(){if(!edit){toast('Activá edición');return}if(!confirm('¿Intercambiar los circuitos 25 y 26 en TODOS los cursos?'))return;const cambios=[];D.cursos.forEach(c=>{if(!c.circuitosHechos)return;Object.keys(c.circuitosHechos).forEach(alId=>{const arr=c.circuitosHechos[alId]||[];const tiene25=arr.includes('c25');const tiene26=arr.includes('c26');if(tiene25!==tiene26)cambios.push({c,alId,tiene25})})});if(!cambios.length){toast('No había 25/26 para intercambiar');return}pushH();cambios.forEach(({c,alId,tiene25})=>{const arr=c.circuitosHechos[alId];c.circuitosHechos[alId]=tiene25?arr.filter(x=>x!=='c25').concat('c26'):arr.filter(x=>x!=='c26').concat('c25')});save();render();toast('Intercambiados 25↔26 en '+cambios.length+' alumnos')}
 
 // Evaluaciones (con fecha por nota y fotocopias por tema)
 function celdaN(id,eid,notaObj,conFecha,edit2){
@@ -327,19 +331,20 @@ function vEval(c){
  h+='<div class="card wrap"><table><thead><tr><th>Alumno</th>';
  temas.forEach(t=>{
   const evs=c.evaluaciones.filter(e=>e.tema===t);
+  h+=`<th class=grp><div class=rot>📄 Fotocopias · ${esc(t)}</div></th>`;
   evs.forEach(e=>h+=`<th><div class=rot>${esc(evLabel(c,e))}</div>${edit?`<a href="#" onclick="delEval('${e.id}');return false" title="Quitar" style="color:var(--no);text-decoration:none;font-size:10px">✕</a>`:''}</th>`);
-  h+=`<th class=grp><div class=rot>Mejor ${esc(t)}</div></th><th class=grp><div class=rot>📄 ${esc(t)}</div></th>`;
+  h+=`<th class=grp><div class=rot>Mejor ${esc(t)}</div></th>`;
  });
  h+='</tr></thead><tbody>';
  (c.alumnos||[]).forEach(s=>{
   h+=`<tr><td>${esc(s.nombre)}</td>`;
   temas.forEach(t=>{
    const evs=c.evaluaciones.filter(e=>e.tema===t);
+   h+=`<td class=grp><span class="fot" onclick="fotSumar('${s.id}','${esc(t)}',1)" oncontextmenu="fotSumar('${s.id}','${esc(t)}',-1);return false" title="Clic: suma 1. Clic derecho: resta 1">📄 ${fotCont(c,s.id,t)}</span></td>`;
    evs.forEach(e=>{h+=`<td>${celdaN(s.id,e.id,((c.notas||{})[s.id]||{})[e.id],conFecha,edit)}</td>`});
    const m=mejorTema(c,s.id,t);
    const clsM=m==null?'aus':(parseNum(m)>=APROB?'okk':'bad');
    h+=`<td class="grp"><b class="num ${clsM}" style="display:inline-block;min-width:32px;padding:3px 8px;border-radius:6px">${m??'—'}</b></td>`;
-   h+=`<td class="grp"><span class="fot" onclick="fotSumar('${s.id}','${esc(t)}',1)" oncontextmenu="fotSumar('${s.id}','${esc(t)}',-1);return false" title="Clic: suma 1. Clic derecho: resta 1">📄 ${fotCont(c,s.id,t)}</span></td>`;
   });
   h+='</tr>';
  });
@@ -553,7 +558,7 @@ function doImportJSON(modo){
   cur=D.cursos.length-1;save();render();closeModal();toast('Agregados '+add+' cursos'+(dup?', '+dup+' ya existían':''));
  }catch(e){toast('JSON inválido: '+(e&&e.message||e))}
 }
-function closeModal(){$('#modal').classList.remove('on')}
+function closeModal(){listaDraft=null;listaInicial={};listaFecha='';listaTeniaFecha=false;$('#modal').classList.remove('on')}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#modal').classList.contains('on'))closeModal()});
 function loadJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const o=JSON.parse(e.target.result);if(!o.cursos)throw 0;pushH();D=o;cur=0;save();render();toast('Datos cargados: '+o.cursos.length+' cursos')}catch(x){toast('Archivo inválido')}};r.readAsText(f)}
 function blank(){if(!confirm('¿Empezar sin datos?'))return;D={v:6,cursos:[],circuitos:{}};save();render()}
